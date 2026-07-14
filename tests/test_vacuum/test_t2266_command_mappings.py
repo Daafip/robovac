@@ -31,6 +31,21 @@ def test_t2266_protocol_version() -> None:
     assert T2266.protocol_version == 3.5
 
 
+def test_t2266_does_not_opt_into_protocol_35_network_behaviors() -> None:
+    """T2266 must not enable the T2276's protocol 3.5 network opt-ins.
+
+    protocol_35_empty_dps_query and protocol_35_map_data_keepalive change what
+    the integration sends on the wire (empty-DPS status queries, SET_COMMAND_NEW
+    writes to DPS 121 on ping). They were validated for the T2276 with packet
+    captures; no equivalent T2266 capture exists, so they must stay off until
+    one does.
+    """
+    from custom_components.robovac.vacuums.T2266 import T2266
+
+    assert getattr(T2266, "protocol_35_empty_dps_query", False) is False
+    assert getattr(T2266, "protocol_35_map_data_keepalive", False) is False
+
+
 def test_t2266_dps_codes(mock_t2266_robovac) -> None:
     """Test that T2266 has the correct DPS codes (protocol 3.5, standard Tuya)."""
     dps_codes = mock_t2266_robovac.getDpsCodes()
@@ -51,8 +66,8 @@ def test_t2266_dps_codes(mock_t2266_robovac) -> None:
 def test_t2266_mode_command_values(mock_t2266_robovac) -> None:
     """Test T2266 MODE command value mappings.
 
-    Note: X8 Pro uses lowercase "auto" unlike T2128's "Auto",
-    confirmed via local protocol 3.5 packet capture.
+    Note: the X8 Pro series uses lowercase "auto" unlike T2128's "Auto",
+    confirmed by T2276 packet capture and the T2266 cloud DPS snapshot.
     """
     assert mock_t2266_robovac.getRoboVacCommandValue(RobovacCommand.MODE, "auto") == "auto"
     assert mock_t2266_robovac.getRoboVacCommandValue(RobovacCommand.MODE, "small_room") == "SmallRoom"

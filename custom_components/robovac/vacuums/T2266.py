@@ -13,6 +13,13 @@ Note: contrary to the initial assumption that the T2266 was a bare charging-base
 model, the snapshot shows it does have a station with dust collection (DPS 126,
 base64 JSON). Neither this config nor the T2276 config maps DPS 126, though —
 station / dust-collect control is not exposed as a Home Assistant command.
+
+Unlike the T2276, this config does not opt into the protocol 3.5 network
+behaviors (protocol_35_empty_dps_query, protocol_35_map_data_keepalive). Those
+were validated for the T2276 with local packet captures; a cloud DPS snapshot
+cannot show whether the T2266 needs an empty-DPS status query or a DPS 121
+map-data keepalive on ping. Enable them only with a T2266 packet capture
+proving the behavior.
 """
 from homeassistant.components.vacuum import VacuumEntityFeature
 from .base import RoboVacEntityFeature, RobovacCommand, RobovacModelDetails
@@ -20,8 +27,6 @@ from .base import RoboVacEntityFeature, RobovacCommand, RobovacModelDetails
 
 class T2266(RobovacModelDetails):
     protocol_version = 3.5
-    protocol_35_empty_dps_query = True
-    protocol_35_map_data_keepalive = True
     homeassistant_features = (
         VacuumEntityFeature.FAN_SPEED
         | VacuumEntityFeature.LOCATE
@@ -47,8 +52,9 @@ class T2266(RobovacModelDetails):
         RobovacCommand.MODE: {
             "code": 5,
             "values": {
-                # X8 Pro uses lowercase "auto" (unlike T2128's "Auto"),
-                # confirmed via local Tuya protocol 3.5 packet capture.
+                # X8 Pro series uses lowercase "auto" (unlike T2128's "Auto"):
+                # confirmed by T2276 packet capture and the T2266 cloud DPS
+                # snapshot, which reports the same lowercase value.
                 "auto": "auto",
                 "small_room": "SmallRoom",
                 "spot": "Spot",
