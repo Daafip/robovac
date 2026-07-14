@@ -95,3 +95,21 @@ async def test_other_clean_param_models_keep_clean_type_diagnostic_sensor() -> N
     await async_setup_sensor_entry(None, entry, sensor_entities.extend)
 
     assert "Clean Type" in [entity.name for entity in sensor_entities]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("model", ["T2080A", "T2080A product suffix"])
+async def test_t2080a_only_creates_battery_auxiliary_entity(model: str) -> None:
+    """T2080A must not inherit T2080-only diagnostics or controls."""
+    entry = SimpleNamespace(data={CONF_VACS: {"vacuum": _vacuum_config(model)}})
+    sensor_entities = []
+    select_entities = []
+    switch_entities = []
+
+    await async_setup_sensor_entry(None, entry, sensor_entities.extend)
+    await async_setup_select_entry(None, entry, select_entities.extend)
+    await async_setup_switch_entry(None, entry, switch_entities.extend)
+
+    assert [entity.name for entity in sensor_entities] == ["Battery"]
+    assert select_entities == []
+    assert switch_entities == []
